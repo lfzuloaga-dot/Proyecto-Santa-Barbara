@@ -10,7 +10,6 @@ Modelar la viabilidad financiera del taller **Santa Bárbara** mediante simulaci
 * Visión General
 * Fundamentos Matemáticos
 * Parámetros del Modelo
-* Pseudocódigo
 * Suposiciones y Alcances
 * Validación y Calidad de Resultados
 * Reproducibilidad
@@ -29,42 +28,32 @@ El algoritmo ejecuta una simulación determinística por **mes** y por **escenar
 * Mes de **punto de equilibrio** (primer mes con flujo acumulado positivo).
 * Indicadores financieros: **TIR**, **VAN** (suma de flujos) y **VPN** (descontado con WACC).
 
----
 
 ## Fundamentos Matemáticos
 
 **Actualización mensual de índices**
-\[
-f_{\text{infl}}(i) = (1+\text{inflación})^i,\qquad
-tc_{i} = tc_{\text{inicial}}\cdot(1+\text{crec\_tc})^i
-\]
+
+<img width="356" height="28" alt="image" src="https://github.com/user-attachments/assets/494c2963-198d-4809-bc86-11ca9004a45a" />
+
 
 **Ingresos proyectados**
-\[
-\text{Ingreso}_i = \text{IngresoBase}\cdot\Big((1+\text{inflación})(1+\text{crec\_real})\Big)^i
-\]
+
+<img width="359" height="26" alt="image" src="https://github.com/user-attachments/assets/64734097-bbc6-420e-a117-17a09c8616d3" />
 
 **Costos operativos ajustados**
-\[
-\text{Costos}_i = (C_f + C_v)\cdot f_{\text{infl}}(i)
-\]
-*(Nota: en el código, costos en Bs y en USD se suman sin convertir explícitamente la porción en Bs a USD; puede ajustarse para mayor rigor).*
+
+<img width="164" height="28" alt="image" src="https://github.com/user-attachments/assets/aca04f9a-de0e-48c3-97dd-16114d84fb20" />
 
 **Tributos actividad económica**
-\[
-AE_i = 0.03\cdot \text{Ingreso}_i
-\]
 
-**ISLR mensual (aprox.)**  
-Se calcula sobre la **ganancia neta en Bs** aplicando tramos y luego se convierte a USD.
+<img width="253" height="29" alt="image" src="https://github.com/user-attachments/assets/50ee0cee-11e0-4a46-b608-ed7e7d5d9494" />
 
-**Flujo neto y acumulado**
-\[
-F_i = \text{Ingreso}_i - (\text{Costos}_i + AE_i + \text{Inversión}_i + \text{ISLR}_i)
-\]
-\[
-FA_i = \sum_{k=0}^{i} F_k
-\]
+
+
+**Flujo neto**
+
+<img width="418" height="44" alt="image" src="https://github.com/user-attachments/assets/57d72ae0-c071-45d5-a181-13ac5d86fa08" />
+
 
 **Indicadores**
 - **TIR**: `irr(flujos)`
@@ -105,50 +94,6 @@ FA_i = \sum_{k=0}^{i} F_k
 
 **Descuento:**
 - `WACC = 0.16` (16%) para **VPN**.
-
----
-
-## Pseudocódigo
-
-```bash
-INPUT: meses, ingreso_base, costos_fijos, costos_variables,
-       inversión_total (3 meses), inflación, crec_real,
-       tc_inicial, tc_crecimiento, dolarización,
-       tasa_actividad_económica, tramos_ISLR, WACC
-
-FOR escenario in [optimista, base, pesimista]:
-    flujo_acum = 0
-    break_even = None
-    FOR i, mes in enumerate(meses):
-        f_infl = (1 + inflacion_esc)^i
-        tc_mes = tc_inicial * (1 + tc_crec_esc)^i
-
-        ingresos = ingreso_base * ((1+inflacion_esc)*(1+crec_real_esc))^i
-        costos   = (costos_fijos + costos_variables) * f_infl
-        tributos = 0.03 * ingresos
-        inversion = (i < 3) ? inversion_total/3 : 0
-
-        ganancia_neta = ingresos - (costos + tributos + inversion)
-        islr = tramo_ISLR(ganancia_neta * tc_mes) / tc_mes   # si ganancia > 0
-
-        salida_total = costos + tributos + inversion + islr
-        flujo = ingresos - salida_total
-        flujo_acum += flujo
-
-        if (flujo_acum > 0 and break_even == None):
-            break_even = mes
-
-        registrar fila en DataFrame: (mes, tc_mes, ingresos, costos,
-                                      tributos, inversion, islr,
-                                      flujo, flujo_acum)
-
-    TIR = irr(flujos)
-    VAN = sum(flujos)
-    VPN = npv(WACC, flujos)
-
-    imprimir tabla, break_even, TIR, VAN, VPN
-
-```
 
 ## Suposiciones y Alcances
 
